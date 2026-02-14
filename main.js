@@ -2,6 +2,12 @@ const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
         AlignmentType, BorderStyle, WidthType, ShadingType, HeadingLevel } = require('docx');
 const fs = require('fs');
 
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, 
+         AlignmentType, BorderStyle, WidthType, ShadingType, HeadingLevel } from 'docx';
+
+// Adicionar log inicial
+console.log('🟢 Script main.js carregado com sucesso!');
+
 const CORES = {
   TITULO: "203864",
   DESTAQUE: "E7E6E6",
@@ -148,6 +154,8 @@ function paragrafo(texto) {
     children: [new TextRun({ text: texto, size: 22 })]
   });
 }
+
+console.log('🟢 Todas as funções auxiliares definidas');
 
 const doc = new Document({
   styles: {
@@ -772,7 +780,151 @@ const doc = new Document({
 Packer.toBuffer(doc).then(buffer => {
   fs.writeFileSync("/mnt/user-data/outputs/Camara_Deputados_Prova_Discursiva_Guia_Completo.docx", buffer);
   console.log("✅ Documento criado com sucesso!");
+  console.log('🟢 Documento criado com sucesso!');
 }).catch(err => {
   console.error("❌ Erro ao criar documento:", err);
   process.exit(1);
 });
+
+// ADICIONAR CONSOLE DE DEBUG NA TELA
+function addDebugLog(message, type = 'info') {
+  const debugContainer = document.getElementById('debugLogs');
+  if (!debugContainer) {
+    const container = document.createElement('div');
+    container.id = 'debugLogs';
+    container.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.9);
+      color: #00ff00;
+      padding: 15px;
+      border-radius: 10px;
+      max-width: 400px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 9999;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    `;
+    document.body.appendChild(container);
+  }
+  
+  const log = document.createElement('div');
+  const timestamp = new Date().toLocaleTimeString();
+  
+  const colors = {
+    'info': '#00ff00',
+    'success': '#00ffff',
+    'error': '#ff0000',
+    'warning': '#ffff00'
+  };
+  
+  log.style.color = colors[type] || colors.info;
+  log.style.marginBottom = '5px';
+  log.innerHTML = `[${timestamp}] ${message}`;
+  
+  document.getElementById('debugLogs').appendChild(log);
+  document.getElementById('debugLogs').scrollTop = document.getElementById('debugLogs').scrollHeight;
+  
+  console.log(`[${type.toUpperCase()}] ${message}`);
+}
+
+// FUNÇÃO PARA GERAR O DOCUMENTO COM DEBUG
+window.gerarDocumento = async function() {
+    addDebugLog('🔵 Função gerarDocumento() chamada', 'info');
+    
+    const btn = document.getElementById('btnGerar');
+    const status = document.getElementById('status');
+    
+    if (!btn) {
+      addDebugLog('❌ ERRO: Botão não encontrado!', 'error');
+      return;
+    }
+    
+    if (!status) {
+      addDebugLog('❌ ERRO: Elemento status não encontrado!', 'error');
+      return;
+    }
+    
+    addDebugLog('✅ Elementos HTML encontrados', 'success');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Gerando documento...';
+    status.style.display = 'flex';
+    status.className = 'status processing';
+    status.innerHTML = '<span class="spinner"></span> Processando... Isso pode levar alguns segundos';
+    
+    addDebugLog('🔄 Interface atualizada - processamento iniciado', 'info');
+    
+    try {
+        addDebugLog('📦 Verificando objeto Document...', 'info');
+        if (!doc) {
+          throw new Error('Documento não foi criado corretamente');
+        }
+        addDebugLog('✅ Objeto Document válido', 'success');
+        
+        addDebugLog('🔄 Chamando Packer.toBuffer()...', 'info');
+        const buffer = await Packer.toBuffer(doc);
+        addDebugLog(`✅ Buffer gerado com sucesso! Tamanho: ${buffer.byteLength} bytes`, 'success');
+        
+        addDebugLog('🔄 Criando Blob...', 'info');
+        const blob = new Blob([buffer], { 
+            type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+        });
+        addDebugLog(`✅ Blob criado! Tamanho: ${blob.size} bytes`, 'success');
+        
+        addDebugLog('🔄 Criando URL para download...', 'info');
+        const url = window.URL.createObjectURL(blob);
+        addDebugLog('✅ URL criada: ' + url.substring(0, 50) + '...', 'success');
+        
+        addDebugLog('🔄 Criando elemento <a> para download...', 'info');
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'Camara_Deputados_Prova_Discursiva_Guia_Completo.docx';
+        
+        addDebugLog('🔄 Adicionando link ao DOM...', 'info');
+        document.body.appendChild(link);
+        
+        addDebugLog('🔄 Disparando click() no link...', 'info');
+        link.click();
+        
+        addDebugLog('🔄 Removendo link do DOM...', 'info');
+        document.body.removeChild(link);
+        
+        addDebugLog('🔄 Liberando URL...', 'info');
+        window.URL.revokeObjectURL(url);
+        
+        status.className = 'status success';
+        status.textContent = '✅ Documento gerado com sucesso! O download deve iniciar automaticamente.';
+        btn.textContent = 'Gerar Novamente';
+        
+        addDebugLog('🎉 PROCESSO CONCLUÍDO COM SUCESSO!', 'success');
+        
+    } catch (error) {
+        addDebugLog('❌ ERRO CAPTURADO: ' + error.message, 'error');
+        addDebugLog('📋 Stack trace: ' + error.stack, 'error');
+        
+        status.className = 'status error';
+        status.textContent = '❌ Erro ao gerar documento: ' + error.message;
+        btn.textContent = 'Tentar Novamente';
+        
+        console.error('Erro completo:', error);
+    } finally {
+        btn.disabled = false;
+        addDebugLog('🔵 Finally: botão reativado', 'info');
+    }
+}
+
+// Log quando a função é atribuída
+console.log('🟢 Função gerarDocumento() atribuída ao window');
+
+// Verificar se tudo está ok quando a página carregar
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('🟢 DOM carregado');
+  addDebugLog('✅ Página carregada completamente', 'success');
+  addDebugLog('✅ Script inicializado com sucesso', 'success');
+  addDebugLog('ℹ️ Clique no botão para gerar o documento', 'info');
+});
+
