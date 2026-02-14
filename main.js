@@ -301,7 +301,7 @@ function addDebugLog(message, type = 'info') {
   console.log(`[${type.toUpperCase()}] ${message}`);
 }
 
-// FUNÇÃO PARA GERAR O DOCUMENTO COM DEBUG
+// FUNÇÃO PARA GERAR O DOCUMENTO COM DEBUG (VERSÃO CORRIGIDA PARA BROWSER)
 window.gerarDocumento = async function() {
     addDebugLog('🔵 Função gerarDocumento() chamada', 'info');
     
@@ -335,15 +335,10 @@ window.gerarDocumento = async function() {
         }
         addDebugLog('✅ Objeto Document válido', 'success');
         
-        addDebugLog('🔄 Chamando Packer.toBuffer()...', 'info');
-        const buffer = await Packer.toBuffer(doc);
-        addDebugLog(`✅ Buffer gerado com sucesso! Tamanho: ${buffer.byteLength} bytes`, 'success');
-        
-        addDebugLog('🔄 Criando Blob...', 'info');
-        const blob = new Blob([buffer], { 
-            type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-        });
-        addDebugLog(`✅ Blob criado! Tamanho: ${blob.size} bytes`, 'success');
+        // ====== MUDANÇA AQUI: Usar toBlob() ao invés de toBuffer() ======
+        addDebugLog('🔄 Chamando Packer.toBlob()...', 'info');
+        const blob = await Packer.toBlob(doc);
+        addDebugLog(`✅ Blob gerado com sucesso! Tamanho: ${blob.size} bytes`, 'success');
         
         addDebugLog('🔄 Criando URL para download...', 'info');
         const url = window.URL.createObjectURL(blob);
@@ -395,3 +390,4 @@ window.addEventListener('DOMContentLoaded', () => {
   addDebugLog('✅ Script inicializado com sucesso', 'success');
   addDebugLog('ℹ️ Clique no botão para gerar o documento', 'info');
 });
+
